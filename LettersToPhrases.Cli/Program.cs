@@ -192,6 +192,7 @@ namespace LettersToPhrases.Cli
 			// dotnet-version and OS environment + architecture + arm or x86
 			Console.WriteLine($" .NET{Environment.Version} | OS: {Environment.OSVersion} ({(Environment.Is64BitOperatingSystem ? "64" : "32")}-bit {RuntimeInformation.ProcessArchitecture.ToString()})");
 			// Headline end
+			Console.WriteLine();
 			Console.WriteLine(" ~~~>>~~~>>~~>~>   -- -- --   -- --   <~ ~ ~>   -- --   -- -- --   <~<~~<<~~~<<~~~ ");
 			Console.WriteLine();
 

@@ -4,10 +4,6 @@
       "commandName": "WSL2",
       "distributionName": ""
     },
-    "LTP.Cli (dialog)": {
-      "commandName": "Project",
-      "commandLineArgs": "--dialog"
-    },
     "LTP.Cli (DE default)": {
       "commandName": "Project",
       "commandLineArgs": "--de --ignorecase --noreuse --minlength 2 --indicate --realtime --threads 0"
@@ -15,6 +11,10 @@
     "LTP.Cli (EN default)": {
       "commandName": "Project",
       "commandLineArgs": "--en --ignorecase --noreuse --minlength 2 --indicate --realtime --threads 0"
+    },
+    "LTP.Cli (DE dialog)": {
+      "commandName": "Project",
+      "commandLineArgs": "--de --dialog"
     }
   }
 }
