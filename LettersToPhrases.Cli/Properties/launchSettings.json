@@ -1,0 +1,24 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "LTP.Cli (-, 512, ind, rt)": {
+      "commandName": "Project",
+      "commandLineArgs": "--ignorecase --max=512 --indicate --realtime"
+    },
+    "LTP.Cli (DE, quick-auto)": {
+      "commandName": "Project",
+      "commandLineArgs": "Arbeitsplätze schaffen, Rente ab neunundneunzig, macht alles dicht --de --ignorecase --max=256 --indicate --realtime"
+    },
+    "LTP.Cli (EN, quick-auto)": {
+      "commandName": "Project",
+      "commandLineArgs": "--en --ignorecase --max=256 --indicate --realtime"
+    },
+    "LTP.Cli (-, 0, ind, nolimit)": {
+      "commandName": "Project",
+      "commandLineArgs": "--ignorecase --max=0 --indicate --nolimit"
+    }
+  }
+}

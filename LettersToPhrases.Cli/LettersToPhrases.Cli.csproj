@@ -1,0 +1,77 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NHunspell" Version="1.2.5554.16953" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="hunspell\de_DE.aff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\de_DE.dic">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\en_GB.aff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\en_GB.dic">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\en_US.aff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\en_US.dic">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\fr.aff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\fr.dic">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\Hunspellx64.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\Hunspellx86.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\NHunspell.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\NHunspell.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(NuGetPackageRoot)nhunspell\1.2.5554.16953\runtimes\win-x64\native\Hunspellx64.dll" Condition="Exists('$(NuGetPackageRoot)nhunspell\1.2.5554.16953\runtimes\win-x64\native\Hunspellx64.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- optional für x86 -->
+    <None Include="$(NuGetPackageRoot)nhunspell\1.2.5554.16953\runtimes\win-x86\native\Hunspellx86.dll" Condition="Exists('$(NuGetPackageRoot)nhunspell\1.2.5554.16953\runtimes\win-x86\native\Hunspellx86.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="CopyHunspellNative" AfterTargets="Build">
+    <Copy SourceFiles="$(NuGetPackageRoot)nhunspell\1.2.5554.16953\runtimes\win-x64\native\Hunspellx64.dll"
+          DestinationFolder="$(OutDir)"
+          Condition="Exists('$(NuGetPackageRoot)nhunspell\1.2.5554.16953\runtimes\win-x64\native\Hunspellx64.dll')" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\hunspell\Hunspellx64.dll"
+          DestinationFolder="$(OutDir)"
+          Condition="Exists('$(MSBuildProjectDirectory)\hunspell\Hunspellx64.dll')" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\hunspell\Hunspellx86.dll"
+          DestinationFolder="$(OutDir)"
+          Condition="Exists('$(MSBuildProjectDirectory)\hunspell\Hunspellx86.dll')" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\hunspell\Hunspell.dll"
+          DestinationFolder="$(OutDir)"
+          Condition="Exists('$(MSBuildProjectDirectory)\hunspell\Hunspell.dll')" />
+  </Target>
+
+</Project>
