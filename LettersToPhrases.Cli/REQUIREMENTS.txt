@@ -1,0 +1,53 @@
+Program.cs (Entry point of the console application)
+
+// ---- Args:
+			// string letters (directly after executable call, no -- (option flag), just raw string)
+			// ---- Options:
+			// --en, --de, --fr (language(s) to use, default: null -> auto get from system culture), can be multiple
+			// --casesensitive XOR --ignorecase (default if none: ignore case)
+			// --reuse XOR --noreuse (default if none: reuse)
+			// --minlength <int> (default if not specified: 2)
+			// --indicateconsecutive XOR --noindicate (default if none: indicate)
+			// --realtime XOR --silent (default if none: no real-time output (silent (only reports combinations tried count and rate every second in cmd (replace line instead of new line))))
+			// --threads <int> XOR --allthreads XOR --singlethread (default if not specified or <=0: all available processors)
+			// ---- Functionality:
+			// First determine language(s) to use based on options or system culture
+			// Then prompt user for letters if not provided as arg in first (or single determined) language
+			// Finally call LettersCombiner.CombineLettersAsync with specified options
+
+
+LettersCombiner.cs (Core functionality for combining letters into phrases) entry point stub definition
+public async Task<string[]> CombineLettersAsync(string letters, IEnumerable<Languages>? languages = null,
+			bool caseSensitive = false, bool reuse = false,
+			int minWordLength = 2, bool indicateConsecutiveSubstrings = true,
+			bool realTimeOutput = false, bool cmdLogProgress = true,
+			int maxWorkers = 0, IProgress<double>? progress = null, CancellationToken ct = default)
+		{
+			// REQUIREMENTS:
+			// ---- Parameters:
+			// letters: string of letters that will be used for combinations
+			// languages: optional list of languages to consider; if null, use system language or default to English
+			// caseSensitive: whether letter case matters
+			// reuse: whether letters (or letter groups) can be reused in combinations. Mathematik -> Stochastik -> Kombinatorik (ggf. 'ohne Zurücklegen')
+			// minWordLength: minimum length of words to consider in combinations (if default 2 is used, single-letter words will be ignored for example)
+			// indicateConsecutiveSubstrings: whether to mark combinations that use consecutive substrings from the input letters e.g.: Input="Giraffe", possible combination = "affe" (when caseSensitive=false) so highlight that consecutive substring by putting brackets [] around
+			// maxWorkers: maximum number of parallel workers to use; <= 0 means all threads, else clamp to 1 - Environment.ProcessorCount
+			// realTimeOutput: whether to output found combinations to console in real-time as they are found. If true, cmdLogProgress will be ignored
+			// cmdLogProgress: whether to log progress to console periodically (like every second or so (reasonable) how many combinations have already been tried + time elapsed in seconds in brackets like (2:30 min.) or (57 sec.)), IMPORTANT: dont write new lines for each update, but overwrite the previous line
+			// progress: optional progress reporter (0.0 start to 1.0 finished (all combinations played through))
+			// ct: optional cancellation token, if cancellation is requested, the method should stop processing and yield what it has so far
+			// ---- Architecture:
+			// Maximum performance & efficiency while thread-safe, non-blocking, and responsive to cancellation requests
+			// Gets resources (Dictionaries (.aff & .dic files) for the specified languages) in RepoPath\hunspell\ directory. Named like de_DE.dic & de_DE.aff for German (Germany)
+			// Cancel (or simply stop / finish) processing as soon as cancellation is requested via the provided CancellationToken (ct) or the internal Cts (user pressed Q-Key in Cmd Window (focussed)). If no or default ct is provided, only (init and register etc. and) use internal Cts.
+			// ---- Functionality:
+			// Generate all possible combinations of the input letters according to the specified parameters
+			// Try building (multiple) words or even phrases and prioritize using longer consecutive substrings from the input letters (Sinn: man muss weniger zerschneiden)
+			// Run until actually all combinations have been tried (maybe non-deterministic task here idk (?)) and return all valid combinations found or at least until cancellation is requested, then return / yield what has been combined successfully so far
+			// Cancellation (or 'force yielding' so to say) happens via provided ct or internal Cts (user pressed Q-Key in Cmd Window (window focussed or active))
+			// Run Stopwatch around whole process and log time taken to console at the end / cancellation
+			// If possible or if it makes sense (without enormouse extra effort), track and calculate performance metrics like combinations per second and log them to console at the end / cancellation
+			// Finally Cmd Prompt ask user if they want to copy the results to clipboard (y/n), if y, copy to clipboard using TextCopy package
+
+			// Anschauliches knackiges Beispiel: "she believed" kann zu "he lied" kombiniert werden (auch ohne reuse). Mit indicateConsecutiveSubstrings=true sollte "[he] [lie]d" auch rauskommen.
+		}

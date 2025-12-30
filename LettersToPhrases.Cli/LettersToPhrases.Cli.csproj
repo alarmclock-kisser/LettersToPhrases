@@ -9,9 +9,22 @@
 
   <ItemGroup>
     <PackageReference Include="NHunspell" Version="1.2.5554.16953" />
+    <PackageReference Include="TextCopy" Version="6.2.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="hunspell\de-AT.aff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\de-AT.dic">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\de_CH.aff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\de_CH.dic">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="hunspell\de_DE.aff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -30,6 +43,12 @@
     <None Update="hunspell\en_US.dic">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="hunspell\es_ES.aff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\es_ES.dic">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="hunspell\fr.aff">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -42,10 +61,22 @@
     <None Update="hunspell\Hunspellx86.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="hunspell\it_IT.aff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\it_IT.dic">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="hunspell\NHunspell.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="hunspell\NHunspell.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\tr_TR.aff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="hunspell\tr_TR.dic">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -60,18 +91,10 @@
   </ItemGroup>
 
   <Target Name="CopyHunspellNative" AfterTargets="Build">
-    <Copy SourceFiles="$(NuGetPackageRoot)nhunspell\1.2.5554.16953\runtimes\win-x64\native\Hunspellx64.dll"
-          DestinationFolder="$(OutDir)"
-          Condition="Exists('$(NuGetPackageRoot)nhunspell\1.2.5554.16953\runtimes\win-x64\native\Hunspellx64.dll')" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\hunspell\Hunspellx64.dll"
-          DestinationFolder="$(OutDir)"
-          Condition="Exists('$(MSBuildProjectDirectory)\hunspell\Hunspellx64.dll')" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\hunspell\Hunspellx86.dll"
-          DestinationFolder="$(OutDir)"
-          Condition="Exists('$(MSBuildProjectDirectory)\hunspell\Hunspellx86.dll')" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\hunspell\Hunspell.dll"
-          DestinationFolder="$(OutDir)"
-          Condition="Exists('$(MSBuildProjectDirectory)\hunspell\Hunspell.dll')" />
+    <Copy SourceFiles="$(NuGetPackageRoot)nhunspell\1.2.5554.16953\runtimes\win-x64\native\Hunspellx64.dll" DestinationFolder="$(OutDir)" Condition="Exists('$(NuGetPackageRoot)nhunspell\1.2.5554.16953\runtimes\win-x64\native\Hunspellx64.dll')" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\hunspell\Hunspellx64.dll" DestinationFolder="$(OutDir)" Condition="Exists('$(MSBuildProjectDirectory)\hunspell\Hunspellx64.dll')" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\hunspell\Hunspellx86.dll" DestinationFolder="$(OutDir)" Condition="Exists('$(MSBuildProjectDirectory)\hunspell\Hunspellx86.dll')" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\hunspell\Hunspell.dll" DestinationFolder="$(OutDir)" Condition="Exists('$(MSBuildProjectDirectory)\hunspell\Hunspell.dll')" />
   </Target>
 
 </Project>
