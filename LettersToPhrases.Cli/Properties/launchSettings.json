@@ -4,17 +4,29 @@
       "commandName": "WSL2",
       "distributionName": ""
     },
-    "LTP.Cli (DE default)": {
-      "commandName": "Project",
-      "commandLineArgs": "--de --ignorecase --noreuse --minlength 2 --indicate --realtime --threads 0"
-    },
     "LTP.Cli (EN default)": {
       "commandName": "Project",
-      "commandLineArgs": "--en --ignorecase --noreuse --minlength 2 --indicate --realtime --threads 0"
+      "commandLineArgs": "\"We learn from history that we do not learn from history\"\r\n--en --ignorecase --noreuse --minlength 2 --tryuseall --filterpermutations  --indicate --silent --enumerate --resultfile --threads 0"
     },
     "LTP.Cli (DE dialog)": {
       "commandName": "Project",
       "commandLineArgs": "--de --dialog"
+    },
+    "LTP.Cli (DE auto live)": {
+      "commandName": "Project",
+      "commandLineArgs": "\"Dann fragen Sie mal Ihre Töchter, was ich damit gemeint haben könnte\"\r\n--de --ignorecase --noreuse --minlength 3 --tryuseall --filterpermutations  --indicate --realtime --enumerate --resultfile --threads 0"
+    },
+    "LTP.Cli (DE default long)": {
+      "commandName": "Project",
+      "commandLineArgs": "\"Dann fragen Sie mal Ihre Töchter, was ich damit gemeint haben könnte\"\r\n--de --ignorecase --noreuse --minlength 3 --tryuseall --filterpermutations --indicate --silent --enumerate --resultfile --threads 0"
+    },
+    "LTP.Cli (DE default short refined)": {
+      "commandName": "Project",
+      "commandLineArgs": "\"Ihre Söhne, die kleinen Paschas\"\r\n--de --ignorecase --noreuse --minlength 3 --tryuseall --filterpermutations --indicate --silent --enumerate --resultfile --threads 0"
+    },
+    "LTP.Cli (DE default short)": {
+      "commandName": "Project",
+      "commandLineArgs": "\"Ihre Söhne, die kleinen Paschas\"\r\n--de --ignorecase --noreuse --minlength 3 --indicate --silent --enumerate --resultfile --threads 0"
     }
   }
 }

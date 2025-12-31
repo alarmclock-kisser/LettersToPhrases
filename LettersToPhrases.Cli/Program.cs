@@ -23,27 +23,38 @@ namespace LettersToPhrases.Cli
 			// --realtime XOR --silent (default if none: no real-time output (silent (only reports combinations tried count and rate every second in cmd (replace line instead of new line))))
 			// --threads <int> XOR --allthreads XOR --singlethread (default if not specified or <=0: all available processors)
 
-			string? letters = null;
-			bool dialog = false; // new: interactive prompt for missing options
+			// #0: Initialize ConsoleHistory
+			using var history = new ConsoleHistory(maxLinesInMemory: 200_000, logFilePath: null, skipResultPrefix: " >>> ");
+
+            string? letters = null;
+			bool dialog = false;
 
 			var langs = new List<LettersCombiner.Languages>();
 			bool caseSensitive = false; // default ignore case
-			bool reuse = false;          // default noreuse
+			bool reuse = false;
 			int minLen = 2;
 			bool indicate = true;       // default indicate
 			bool realtime = false;      // default silent-ish
 			bool cmdLogProgress = true; // only used if !realtime
-			int threads = 0;            // default all
+			bool addEnumeration = false; // option to add enumeration to results (default false)
+            int threads = 0;            // default all
+			bool createResultFile = false;
+			bool tryUseAll = false;
+			bool filterPermutations = true;
 
 			// Parse args: first non-flag becomes letters, others are flags/options
 			// Track which options were explicitly set via args
 			bool caseSpecified = false;
 			bool reuseSpecified = false;
 			bool minLenSpecified = false;
+			bool tryUseAllSpecified = false;
+			bool filterPermutationsSpecified = false;
 			bool indicateSpecified = false;
 			bool realtimeSpecified = false;
-			bool threadsSpecified = false;
 			bool cmdLogSpecified = false;
+			bool enumerationSpecified = false;
+            bool threadsSpecified = false;
+			bool writeResultFileSpecified = false;
 
 			for (int i = 0; i < args.Length; i++)
 			{
@@ -106,58 +117,25 @@ namespace LettersToPhrases.Cli
 						continue;
 
 					case "--casesensitive":
-						caseSensitive = true;
 						caseSpecified = true;
+						caseSensitive = true;
 						continue;
 					case "--ignorecase":
-						caseSensitive = false;
 						caseSpecified = true;
+						caseSensitive = false;
 						continue;
 
 					case "--reuse":
-						reuse = true;
 						reuseSpecified = true;
+						reuse = true;
 						continue;
 					case "--noreuse":
-						reuse = false;
 						reuseSpecified = true;
-						continue;
-
-					case "--indicateconsecutive":
-					case "--indicate":
-					case "--consecutive":
-						indicate = true;
-						indicateSpecified = true;
-						continue;
-					case "--noindicate":
-					case "--noindicateconsecutive":
-					case "--noconsecutive":
-						indicate = false;
-						indicateSpecified = true;
-						continue;
-
-					case "--realtime":
-						realtime = true;
-						cmdLogProgress = false;
-						realtimeSpecified = true;
-						continue;
-					case "--silent":
-						realtime = false;
-						cmdLogProgress = true;
-						realtimeSpecified = true;
-						cmdLogSpecified = true;
-						continue;
-
-					case "--allthreads":
-						threads = 0;
-						threadsSpecified = true;
-						continue;
-					case "--singlethread":
-						threads = 1;
-						threadsSpecified = true;
+						reuse = false;
 						continue;
 
 					case "--minlength":
+						minLenSpecified = true;
 						if (i + 1 < args.Length && int.TryParse(args[i + 1], out var ml))
 						{
 							minLen = Math.Max(1, ml);
@@ -166,13 +144,76 @@ namespace LettersToPhrases.Cli
 						}
 						continue;
 
+					case "--tryuseall":
+						tryUseAllSpecified = true;
+						tryUseAll = true;
+						continue;
+					case "--filterpermutations":
+						filterPermutationsSpecified = true;
+						filterPermutations = true;
+						continue;
+					case "--nofilterpermutations":
+					case "--keeppermutations":
+						filterPermutationsSpecified = true;
+						filterPermutations = false;
+						continue;
+
+					case "--indicateconsecutive":
+					case "--indicate":
+					case "--consecutive":
+						indicateSpecified = true;
+						indicate = true;
+						continue;
+					case "--noindicate":
+					case "--noindicateconsecutive":
+					case "--noconsecutive":
+						indicateSpecified = true;
+						indicate = false;
+						continue;
+
+					case "--realtime":
+						realtimeSpecified = true;
+						realtime = true;
+						cmdLogProgress = false;
+						continue;
+					case "--silent":
+						cmdLogSpecified = true;
+						realtime = false;
+						cmdLogProgress = true;
+						realtimeSpecified = true;
+						continue;
+
+					case "--enums":
+					case "--enumerate":
+					case "--addenumeration":
+						enumerationSpecified = true;
+						addEnumeration = true;
+						continue;
+
+                    case "--allthreads":
+						threadsSpecified = true;
+						threads = 0;
+						continue;
+					case "--singlethread":
+						threadsSpecified = true;
+						threads = 1;
+						continue;
+
 					case "--threads":
+						threadsSpecified = true;
 						if (i + 1 < args.Length && int.TryParse(args[i + 1], out var th))
 						{
 							threads = th;
 							threadsSpecified = true;
 							i++;
 						}
+						continue;
+
+					case "--createresultfile":
+					case "--resultfile":
+					case "--writeresultfile":
+						writeResultFileSpecified = true;
+						createResultFile = true;
 						continue;
 
 					case "--help":
@@ -293,6 +334,52 @@ namespace LettersToPhrases.Cli
 					}
 				}
 
+				// Try use all
+				if (!tryUseAllSpecified)
+				{
+					if (LettersCombiner.TryUseAllInputPrompts.TryGetValue(promptLang, out var tryUseAllPrompt))
+					{
+						Console.Write(tryUseAllPrompt);
+						var inp = Console.ReadLine();
+						if (!string.IsNullOrWhiteSpace(inp))
+						{
+							tryUseAll = IsYes(inp);
+						}
+					}
+					else
+					{
+						Console.Write("Prefer results using all letters (few/no leftovers)? (Y/N, default N): ");
+						var inp = Console.ReadLine();
+						if (!string.IsNullOrWhiteSpace(inp))
+						{
+							tryUseAll = IsYes(inp);
+						}
+					}
+				}
+
+				// Filter permutations
+				if (!filterPermutationsSpecified)
+				{
+					if (LettersCombiner.FilterPermutationsInputPrompts.TryGetValue(promptLang, out var filterPermutationsPrompt))
+					{
+						Console.Write(filterPermutationsPrompt);
+						var inp = Console.ReadLine();
+						if (!string.IsNullOrWhiteSpace(inp))
+						{
+							filterPermutations = IsYes(inp);
+						}
+					}
+					else
+					{
+						Console.Write("Filter same-word permutations? (Y/N, default Y): ");
+						var inp = Console.ReadLine();
+						if (!string.IsNullOrWhiteSpace(inp))
+						{
+							filterPermutations = IsYes(inp);
+						}
+					}
+				}
+
 				// Indicate consecutive
 				if (!indicateSpecified)
 				{
@@ -349,8 +436,31 @@ namespace LettersToPhrases.Cli
 					}
 				}
 
-				// Threads
-				if (!threadsSpecified)
+                // Enumeration
+				if (!enumerationSpecified)
+				{
+					if (LettersCombiner.EnumerateInputPrompts.TryGetValue(promptLang, out var enumPrompt))
+					{
+						Console.Write(enumPrompt);
+						var inp = Console.ReadLine();
+						if (!string.IsNullOrWhiteSpace(inp))
+						{
+							addEnumeration = IsYes(inp);
+						}
+					}
+					else
+					{
+						Console.Write("Add enumeration to results? (Y/N, default N): ");
+						var inp = Console.ReadLine();
+						if (!string.IsNullOrWhiteSpace(inp))
+						{
+							addEnumeration = IsYes(inp);
+						}
+                    }
+                }
+
+                // Threads
+                if (!threadsSpecified)
 				{
 					int maxCpu = Environment.ProcessorCount;
 					if (LettersCombiner.ThreadsInputPrompts.TryGetValue(promptLang, out var threadsPrompt))
@@ -400,21 +510,37 @@ namespace LettersToPhrases.Cli
 			{
 				Console.WriteLine($" - Minimum Word Length: {minLen}");
 			}
+			if (tryUseAllSpecified || dialog)
+			{
+				Console.WriteLine($" - Try Use All Letters: {tryUseAll}");
+			}
+			if (filterPermutationsSpecified || dialog)
+			{
+				Console.WriteLine($" - Filter Permutations: {filterPermutations}");
+			}
 			if (indicateSpecified || dialog)
 			{
 				Console.WriteLine($" - Indicate Consecutive Substrings: {indicate}");
 			}
-			if (realtimeSpecified || dialog)
+			if (enumerationSpecified || dialog)
 			{
-				Console.WriteLine($" - Realtime Output: {realtime}");
+				Console.WriteLine($" - Add Enumeration to Results: {addEnumeration}");
+            }
+            if ((realtimeSpecified || cmdLogSpecified) || dialog)
+			{
+				Console.WriteLine($" - Output Mode: {(realtime ? "Realtime combinations" : "Report only")}");
 			}
 			if (threadsSpecified || dialog)
 			{
-				Console.WriteLine($" - Threads: {(threads <= 0 ? "All Available" : threads.ToString())}");
+				Console.WriteLine($" - Threads: {(threads <= 0 ? $"All ({Environment.ProcessorCount})" : threads + $"(of {Environment.ProcessorCount})")}");
+			}
+			if (writeResultFileSpecified || dialog)
+			{
+				Console.WriteLine(" - Write results to TXT file: " + (createResultFile ? "True" : "False"));
 			}
 			Console.WriteLine();
 			string processingMsg = LettersCombiner.ProcessingInfoMessages.TryGetValue(langs.Count > 0 ? langs[0] : LettersCombiner.Languages.English, out var procMsg) ? procMsg : "PROCESSING START (Q to stop)...";
-			Console.WriteLine($" ~~~>>~~~>>~~>~>   -- -- --   -- --   <~ {processingMsg} ~>   -- --   -- -- --   <~<~~<<~~~<<~~~ ");
+			Console.WriteLine($" ~~~>>~~~>>~~>~>   -- -- --  <~ {processingMsg} ~>  -- -- --   <~<~~<<~~~<<~~~ ");
 			Console.WriteLine();
 
 			// Run
@@ -428,51 +554,156 @@ namespace LettersToPhrases.Cli
 				realTimeOutput: realtime,
 				cmdLogProgress: cmdLogProgress,
 				maxWorkers: threads,
+				createResultFile: createResultFile,
+				tryUseAll: tryUseAll,
+				filterPermutations: filterPermutations,
+				addEnumeration: addEnumeration,
 				progress: null,
 				ct: CancellationToken.None);
 
 			Console.WriteLine();
-			Console.WriteLine($">---)   Σ = {results.Length:n0}   (---<");
+			Console.WriteLine($@" __ . --=-==-<>---)   N = {results.Length:n0}   (---<>-==-=-- . __ ");
 
 			// If realtime is on, it already printed ranked output as it went,
-			// but we still show a compact final list if user wants.
-			if (!realtime)
+			// If createResultFile is on, it already wrote to file
+			if (!realtime && !createResultFile)
 			{
 				foreach (var r in results)
 				{
 					Console.WriteLine(r);
 				}
 			}
-			// Clipboard prompt (TextCopy preferred)
-			Console.WriteLine();
-			if (LettersCombiner.ClipboardInputPrompts.TryGetValue(
-				langs.Count > 0 ? langs[0] : LettersCombiner.Languages.English,
-				out var clipboardPrompt))
-			{
-				Console.Write(clipboardPrompt);
-			}
-			else
-			{
-				Console.Write("Copy results to clipboard? (Y/N default N): ");
-			}
-			ConsoleKeyInfo key = Console.ReadKey(intercept: true);
-			Console.WriteLine();
 
-			if (key.Key == ConsoleKey.Y)
+			bool askClipboard = true;
+			if (createResultFile)
 			{
-				var text = string.Join(Environment.NewLine, results);
-				TextCopy.ClipboardService.SetText(text);
-				if (LettersCombiner.ClipboardSuccessMessages.TryGetValue(
-					langs.Count > 0 ? langs[0] : LettersCombiner.Languages.English,
-					out var clipboardSuccessPrompt))
+				// Start with only file name, then try get full path
+				string txtFilePath = "_TempRunResults.txt";
+				double txtFileSizeKb = 0;
+				double txtFileSizeMb = 0;
+
+				try
 				{
-					Console.WriteLine(clipboardSuccessPrompt);
+					// Set to RepoPath/TextResources/_TempRunResults.txt
+					txtFilePath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TextResources", "_TempRunResults.txt");
+					var fi = new System.IO.FileInfo(txtFilePath);
+					txtFilePath = fi.FullName;
+					txtFileSizeKb = fi.Length / 1024.0;
+					txtFileSizeMb = txtFileSizeKb / 1024.0;
+					string txtFileSizeString = txtFileSizeMb > 1.0 ? $"{txtFileSizeMb:F1} MB" : $"{txtFileSizeKb:F1} KB";
+
+                    if (LettersCombiner.ResultFileWrittenMessages.TryGetValue(langs.Count > 0 ? langs[0] : LettersCombiner.Languages.English, out var resultFileWrittenMsg))
+					{
+						Console.WriteLine(resultFileWrittenMsg + "'" + Path.GetFullPath(txtFilePath) + "' (" + txtFileSizeString + ")");
+                    }
+					else
+					{
+						Console.WriteLine("Results written to '" + Path.GetFullPath(txtFilePath) + "' (" + txtFileSizeString + ")");
+                    }
+
+					// Finally ask prompt (y/n, default n) to open the file in default text editor
+					if (LettersCombiner.OpenEditorInputPrompts.TryGetValue(langs.Count > 0 ? langs[0] : LettersCombiner.Languages.English, out var openEditorPrompt))
+					{
+						Console.WriteLine(" ===> " + openEditorPrompt);
+					}
+					else
+					{
+						Console.WriteLine(" ===> Open result file in default text editor? (Y/N default N): ");
+					}
+
+					ConsoleKeyInfo answerKey = Console.ReadKey(intercept: true);
+					if (answerKey.Key == ConsoleKey.Y || answerKey.Key == ConsoleKey.J || answerKey.Key == ConsoleKey.O || answerKey.Key == ConsoleKey.E || answerKey.Key == ConsoleKey.S)
+					{
+						Console.WriteLine();
+						var psi = new System.Diagnostics.ProcessStartInfo
+						{
+							FileName = txtFilePath,
+							UseShellExecute = true
+						};
+						System.Diagnostics.Process.Start(psi);
+						askClipboard = false; // don't ask for clipboard if opened file
+					}
+
+				}
+				catch (Exception ex)
+				{
+					if (LettersCombiner.ResultFileFailureMessages.TryGetValue(langs.Count > 0 ? langs[0] : LettersCombiner.Languages.English, out var resultFileFailureMsg))
+					{
+						Console.WriteLine(resultFileFailureMsg + ex.ToString());
+					}
+					else
+					{
+						Console.WriteLine("Error with result file: " + ex.ToString());
+					}
+				}
+			}
+
+			if (askClipboard)
+			{
+                // Clipboard prompt if not created or opened result file
+                Console.WriteLine();
+                if (LettersCombiner.ClipboardInputPrompts.TryGetValue(
+                    langs.Count > 0 ? langs[0] : LettersCombiner.Languages.English,
+                    out var clipboardPrompt))
+                {
+                    Console.Write(clipboardPrompt);
+                }
+                else
+                {
+                    Console.Write("Copy results to clipboard? (Y/N default N): ");
+                }
+                ConsoleKeyInfo key = Console.ReadKey(intercept: true);
+                Console.WriteLine();
+
+                if (key.Key == ConsoleKey.Y)
+                {
+                    var text = string.Join(Environment.NewLine, results);
+                    TextCopy.ClipboardService.SetText(text);
+                    if (LettersCombiner.ClipboardSuccessMessages.TryGetValue(
+                        langs.Count > 0 ? langs[0] : LettersCombiner.Languages.English,
+                        out var clipboardSuccessPrompt))
+                    {
+                        Console.WriteLine(clipboardSuccessPrompt);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Results copied to clipboard.");
+                    }
+                }
+            }
+
+			// Finally prompt ask to copy console output (excluding result combination outputs (if realtime)) to clipboard
+			Console.WriteLine();
+				if (LettersCombiner.ClipboardConsolePrompts.TryGetValue(
+					langs.Count > 0 ? langs[0] : LettersCombiner.Languages.English,
+					out var clipboardConsolePrompt))
+				{
+					Console.Write(clipboardConsolePrompt);
 				}
 				else
 				{
-					Console.WriteLine("Results copied to clipboard.");
+					Console.Write("Copy console output to clipboard? (Y/N default N): ");
 				}
-			}
+				ConsoleKeyInfo keyConsole = Console.ReadKey(intercept: true);
+				Console.WriteLine();
+				if (keyConsole.Key == ConsoleKey.Y || keyConsole.Key == ConsoleKey.J || keyConsole.Key == ConsoleKey.O || keyConsole.Key == ConsoleKey.E || keyConsole.Key == ConsoleKey.S)
+				{
+					string consoleText = string.Empty;
+
+                    // Try get current console window lines (not only visible possibly truncated ones, but whole lines ever printed in this console session), excluding results (lines that start with " >>> ")
+                    consoleText = string.Join(Environment.NewLine, history.GetAllLines());
+                    TextCopy.ClipboardService.SetText(consoleText);
+					if (LettersCombiner.ClipboardSuccessMessages.TryGetValue(
+						langs.Count > 0 ? langs[0] : LettersCombiner.Languages.English,
+						out var clipboardSuccessPrompt))
+					{
+						Console.WriteLine(clipboardSuccessPrompt);
+					}
+					else
+					{
+						Console.WriteLine("Console output copied to clipboard.");
+					}
+				}
 		}
 
 		private static bool IsYes(string input)
@@ -505,6 +736,9 @@ namespace LettersToPhrases.Cli
 			Console.WriteLine("  --indicateconsecutive | --noindicate                Mark [consecutive substrings] (default: indicate)");
 			Console.WriteLine("  --realtime | --silent                               Output mode (default: silent)");
 			Console.WriteLine("  --threads <int> | --allthreads | --singlethread     Parallelism (default: allthreads)");
+			Console.WriteLine("  --createresultfile | --resultfile                   Write results to TextResources/_TempRunResults.txt");
+			Console.WriteLine("  --tryuseall                                          Prefer results using all letters (few/no leftovers)");
+			Console.WriteLine("  --filterpermutations | --nofilterpermutations       Collapse same-word permutations (default on)");
 			Console.WriteLine();
 			Console.WriteLine("Cancel anytime with 'Q' (partial results are returned).");
 		}
@@ -539,7 +773,7 @@ namespace LettersToPhrases.Cli
 				var attributes = assembly.GetCustomAttributes(typeof(System.Diagnostics.DebuggableAttribute), false);
 				if (attributes.Length > 0)
 				{
-					var dbgAttr = (System.Diagnostics.DebuggableAttribute)attributes[0];
+					var dbgAttr = (System.Diagnostics.DebuggableAttribute) attributes[0];
 					env = dbgAttr.IsJITTrackingEnabled ? "Debug" : "Release";
 				}
 			}
@@ -572,6 +806,7 @@ namespace LettersToPhrases.Cli
 			return date;
 		}
 
+		
 
 	}
 }

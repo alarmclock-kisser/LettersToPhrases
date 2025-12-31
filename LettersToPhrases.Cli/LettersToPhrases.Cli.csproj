@@ -79,6 +79,9 @@
     <None Update="hunspell\tr_TR.dic">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="TextResources\_TempRunResults.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="$(NuGetPackageRoot)nhunspell\1.2.5554.16953\runtimes\win-x64\native\Hunspellx64.dll" Condition="Exists('$(NuGetPackageRoot)nhunspell\1.2.5554.16953\runtimes\win-x64\native\Hunspellx64.dll')">
